@@ -10,16 +10,102 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Test {
-  id    Int    @id @default(autoincrement())
-  name  String
-  email String
-  phone String
-  age   Int
-  city  String
-  state String
-  zip   String
-  date  String
-  time  String
-  notes String
+// --------------------------- Academic Semester ---------------------------
+model AcademicSemester {
+  id         String    @id @default(uuid())
+  title      String
+  year       String
+  code       String
+  startMonth String
+  endMonth   String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  students   Student[]
+
+  @@map("academic_semesters")
+}
+
+// --------------------------- Academic Faculty ---------------------------
+model AcademicFaculty {
+  id        String   @id @default(uuid())
+  title     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  academicDepartments AcademicDepartment[]
+  students            Student[]
+  faculties           Faculty[]
+
+  @@map("academic_faculties")
+}
+
+// --------------------------- Academic Department ---------------------------
+model AcademicDepartment {
+  id                String          @id @default(uuid())
+  title             String
+  academicFacultyId String          @unique
+  academicFaculty   AcademicFaculty @relation(fields: [academicFacultyId], references: [id])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  students  Student[]
+  faculties Faculty[]
+
+  @@map("academic_departments")
+}
+
+// --------------------------- Student ---------------------------
+model Student {
+  id               String  @id @default(uuid())
+  studentId        String  @unique
+  firstName        String
+  middleName       String?
+  lastName         String
+  profileImage     String?
+  email            String?
+  contactNo        String?
+  gender           String
+  bloodGroup       String
+  presentAddress   String
+  permanentAddress String
+
+  academicSemesterId String           @unique
+  academicSemester   AcademicSemester @relation(fields: [academicSemesterId], references: [id])
+
+  academicFacultyId String          @unique
+  academicFaculty   AcademicFaculty @relation(fields: [academicFacultyId], references: [id])
+
+  academicDepartmentId String             @unique
+  academicDepartment   AcademicDepartment @relation(fields: [academicDepartmentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("students")
+}
+
+// --------------------------- Faculty ---------------------------
+model Faculty {
+  id           String  @id @default(uuid())
+  facultyId    String  @unique
+  firstName    String
+  middleName   String?
+  lastName     String
+  profileImage String?
+  email        String?
+  contactNo    String?
+  gender       String
+  bloodGroup   String
+  designation  String
+
+  academicFacultyId String          @unique
+  academicFaculty   AcademicFaculty @relation(fields: [academicFacultyId], references: [id])
+
+  academicDepartmentId String             @unique
+  academicDepartment   AcademicDepartment @relation(fields: [academicDepartmentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("faculties")
 }
