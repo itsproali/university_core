@@ -1,5 +1,5 @@
-import { PipelineStage } from 'mongoose';
-import { IQueryParams } from '../interfaces/common';
+import { PipelineStage } from "mongoose";
+import { IQueryParams } from "../interfaces/common";
 
 const getAggregationStages = (
   queries: IQueryParams,
@@ -16,14 +16,14 @@ const getAggregationStages = (
   // Searching stage to search in all fields
   const orSearch =
     queries.search &&
-    queries.search !== '' &&
-    queries.search !== 'undefined' &&
+    queries.search !== "" &&
+    queries.search !== "undefined" &&
     searchFields.length
       ? searchFields.map(field => {
           return {
             [field]: {
               $regex: queries.search,
-              $options: 'i',
+              $options: "i",
             },
           };
         })
@@ -35,7 +35,7 @@ const getAggregationStages = (
       ? Object.entries(queries.filters || {}).map(([key, value]) => ({
           [key]: {
             $regex: value,
-            $options: 'i',
+            $options: "i",
           },
         }))
       : [{ _id: { $exists: true } }];
@@ -46,14 +46,14 @@ const getAggregationStages = (
   };
 
   // Sorting stage to sort by field
-  const sortStage: PipelineStage =
-    queries.sortBy && queries.sortOrder
-      ? {
-          $sort: {
-            [queries.sortBy]: queries.sortOrder,
-          },
-        }
-      : { $addFields: {} };
+  // const sortStage: PipelineStage =
+  //   queries.sortBy && queries.sortOrder
+  //     ? {
+  //         $sort: {
+  //           [queries.sortBy]: queries.sortOrder,
+  //         },
+  //       }
+  //     : { $addFields: {} };
 
   // Pagination stage to limit and skip
   const paginationStage: PipelineStage = {
@@ -64,32 +64,32 @@ const getAggregationStages = (
           : { $addFields: {} },
         queries.limit ? { $limit: queries.limit } : { $addFields: {} },
       ],
-      totalDocuments: [{ $count: 'total' }],
-      totalResult: [matchStage, { $count: 'total' }],
+      totalDocuments: [{ $count: "total" }],
+      totalResult: [matchStage, { $count: "total" }],
     },
   };
 
   // Unwind stage to get data from array
   const unwindTotalDocument: PipelineStage = {
-    $unwind: '$totalDocuments',
+    $unwind: "$totalDocuments",
   };
   const unwindTotalResult: PipelineStage = {
-    $unwind: '$totalResult',
+    $unwind: "$totalResult",
   };
 
   // Project stage to get data from array
   const projectStage: PipelineStage = {
     $project: {
       data: 1,
-      totalDocuments: '$totalDocuments.total',
-      totalResult: '$totalResult.total',
+      totalDocuments: "$totalDocuments.total",
+      totalResult: "$totalResult.total",
     },
   };
 
   // Add all stages in array
   const stages: PipelineStage[] = [
     matchStage,
-    sortStage,
+    // sortStage,
     fieldSelection,
     paginationStage,
     unwindTotalDocument,

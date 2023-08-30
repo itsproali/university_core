@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { NextFunction, Request, RequestHandler, Response } from 'express';
+import { NextFunction, Request, RequestHandler, Response } from "express";
 
 // Catch Async Errors
 type IFunction = (

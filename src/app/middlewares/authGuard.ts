@@ -1,18 +1,18 @@
-import { NextFunction, Request, Response } from 'express';
-import httpStatus from 'http-status';
-import config from '../../config';
-import ApiError from '../../errors/ApiError';
-import { verifyToken } from '../../helpers/jwtHelpers';
+import { NextFunction, Request, Response } from "express";
+import httpStatus from "http-status";
+import config from "../../config";
+import ApiError from "../../errors/ApiError";
+import { verifyToken } from "../../helpers/jwtHelpers";
 
 const authGuard =
   (...requiredRoles: string[]) =>
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       // Get token from header
-      const token = req.headers.authorization?.split(' ')[1];
+      const token = req.headers.authorization?.split(" ")[1];
 
       if (!token) {
-        throw new ApiError(httpStatus.UNAUTHORIZED, 'You are not authorized');
+        throw new ApiError(httpStatus.UNAUTHORIZED, "You are not authorized");
       }
 
       // Verify token

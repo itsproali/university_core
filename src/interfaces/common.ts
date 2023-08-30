@@ -14,7 +14,8 @@ export type IQueryParams = {
   limit: number;
   search: string;
   sortBy: string;
-  sortOrder: 1 | -1;
+  // sortOrder: 1 | -1;
+  sortOrder: "asc" | "desc" | string;
   filters: { [key: string]: number | string | boolean };
   fields?: { [key: string]: number };
 };

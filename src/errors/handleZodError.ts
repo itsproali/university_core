@@ -1,8 +1,8 @@
-import { ZodError, ZodIssue } from 'zod';
+import { ZodError, ZodIssue } from "zod";
 import {
   IGenericErrorMessage,
   IGenericErrorResponse,
-} from '../interfaces/common';
+} from "../interfaces/common";
 
 const handleZodError = (error: ZodError): IGenericErrorResponse => {
   const errors: IGenericErrorMessage[] = error.issues.map((issue: ZodIssue) => {
@@ -16,7 +16,7 @@ const handleZodError = (error: ZodError): IGenericErrorResponse => {
 
   return {
     statusCode,
-    message: 'Invalid Input data',
+    message: "Invalid Input data",
     errorMessages: errors,
   };
 };

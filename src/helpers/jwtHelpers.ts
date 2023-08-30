@@ -1,5 +1,5 @@
-import jwt, { JwtPayload, Secret } from 'jsonwebtoken';
-import config from '../config';
+import jwt, { JwtPayload, Secret } from "jsonwebtoken";
+import config from "../config";
 
 export const createToken = (
   payload: Record<string, unknown>, // { userId: string; role: string }

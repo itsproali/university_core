@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Response } from "express";
 
 type IApiResponse<T> = {
   statusCode: number;
@@ -19,7 +19,7 @@ type IApiResponse<T> = {
   };
 };
 
-type ApiResponseWithoutStatusCode<T> = Omit<IApiResponse<T>, 'statusCode'>;
+type ApiResponseWithoutStatusCode<T> = Omit<IApiResponse<T>, "statusCode">;
 
 const sendResponse = <T>(res: Response, resData: IApiResponse<T>): void => {
   const data: ApiResponseWithoutStatusCode<T> = {

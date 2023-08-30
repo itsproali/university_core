@@ -1,8 +1,8 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 import {
   IGenericErrorMessage,
   IGenericErrorResponse,
-} from '../interfaces/common';
+} from "../interfaces/common";
 
 const handleMongooseError = (
   error: mongoose.Error.ValidationError
@@ -18,7 +18,7 @@ const handleMongooseError = (
   const statusCode = 400;
   return {
     statusCode,
-    message: 'Invalid Input data',
+    message: "Invalid Input data",
     errorMessages: errors,
   };
 };

@@ -1,15 +1,16 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { RequestHandler } from 'express';
+import { RequestHandler } from "express";
 
 const queryParams: RequestHandler = (req, res, next) => {
-  const page: number = parseInt(req.query.page as string);
-  const limit: number = parseInt(req.query.limit as string);
-  const search: string = String(req.query.search) || '';
+  const page: number = parseInt(req.query.page as string) || 1;
+  const limit: number = parseInt(req.query.limit as string) || 100;
+  const search: string = String(req.query.search) || "";
   const sortBy: string = req.query.sortBy
     ? String(req.query.sortBy)
-    : 'createdAt';
-  const sortOrder: 1 | -1 =
-    String(req.query.sortOrder) === 'asc' ? 1 : -1 || -1;
+    : "createdAt";
+  // const sortOrder: 1 | -1 =
+  //   String(req.query.sortOrder) === 'asc' ? 1 : -1 || -1;
+  const sortOrder = String(req.query.sortOrder) || "desc";
 
   // setting up filters
   const query: object = req.query;
@@ -18,20 +19,20 @@ const queryParams: RequestHandler = (req, res, next) => {
   };
 
   const excludedFields = [
-    'page',
-    'sortBy',
-    'sortOrder',
-    'limit',
-    'fields',
-    'search',
+    "page",
+    "sortBy",
+    "sortOrder",
+    "limit",
+    "fields",
+    "search",
   ];
 
   excludedFields.forEach(el => delete filters[el]);
 
   Object.keys(filters).forEach(key => {
-    if (filters[key] === 'true') {
+    if (filters[key] === "true") {
       filters[key] = true;
-    } else if (filters[key] === 'false') {
+    } else if (filters[key] === "false") {
       filters[key] = false;
     }
   });
@@ -41,10 +42,10 @@ const queryParams: RequestHandler = (req, res, next) => {
 
   if (req.query.fields) {
     let fields = String(req.query.fields);
-    fields = fields.split(',').join(' ');
+    fields = fields.split(",").join(" ");
 
     // create fields object
-    fields.split(' ').forEach(el => {
+    fields.split(" ").forEach(el => {
       fieldsObj[el] = 1;
     });
   }
