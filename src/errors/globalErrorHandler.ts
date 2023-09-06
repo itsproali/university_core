@@ -1,12 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-unused-vars */
+import { Prisma } from "@prisma/client";
 import { ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
 import config from "../config";
 import { IGenericErrorMessage } from "../interfaces/common";
 import sendResponse from "../shared/sendResponse";
 import ApiError from "./ApiError";
-import handleMongooseError from "./handleMongooseError";
+import {
+  handlePrismaRequestError,
+  handlePrismaValidationError,
+} from "./handlePrismaError";
 import handleZodError from "./handleZodError";
 
 // Global Error Handler
@@ -16,7 +20,12 @@ const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
   let errorMessages: IGenericErrorMessage[] = [];
 
   if (err?.name === "ValidationError") {
-    const simplified = handleMongooseError(err);
+    // const simplified = handleMongooseError(err);
+    // statusCode = simplified.statusCode;
+    // message = simplified.message;
+    // errorMessages = simplified.errorMessages;
+  } else if (err instanceof Prisma.PrismaClientValidationError) {
+    const simplified = handlePrismaValidationError(err);
     statusCode = simplified.statusCode;
     message = simplified.message;
     errorMessages = simplified.errorMessages;
@@ -26,14 +35,19 @@ const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
     message = simplified.message;
     errorMessages = simplified.errorMessages;
   } else if (err?.name === "CastError") {
-    statusCode = 400;
-    message = "Invalid ID";
-    errorMessages = [
-      {
-        path: err?.path || "",
-        message: "Invalid ID",
-      },
-    ];
+    // statusCode = 400;
+    // message = "Invalid ID";
+    // errorMessages = [
+    //   {
+    //     path: err?.path || "",
+    //     message: "Invalid ID",
+    //   },
+    // ];
+  } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    const simplified = handlePrismaRequestError(err);
+    statusCode = simplified.statusCode;
+    message = simplified.message;
+    errorMessages = simplified.errorMessages;
   } else if (err.code === 11000) {
     statusCode = 400;
     message = "Duplicate field value entered";
