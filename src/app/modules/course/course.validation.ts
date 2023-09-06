@@ -21,3 +21,11 @@ export const updateCourseZodSchema = z.object({
     credits: z.number().optional(),
   }),
 });
+
+export const assignRemoveFacultiesZodSchema = z.object({
+  body: z.object({
+    faculties: z.array(z.string(), {
+      required_error: "Faculties Are Required",
+    }),
+  }),
+});

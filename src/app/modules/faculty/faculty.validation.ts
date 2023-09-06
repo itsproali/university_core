@@ -49,3 +49,11 @@ export const updateFacultyZodSchema = z.object({
     academicFacultyId: z.string().optional(),
   }),
 });
+
+export const assignRemoveCoursesZodSchema = z.object({
+  body: z.object({
+    courses: z.array(z.string(), {
+      required_error: "Courses Are Required",
+    }),
+  }),
+});

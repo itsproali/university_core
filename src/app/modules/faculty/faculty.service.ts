@@ -73,10 +73,48 @@ const deleteFacultyService = async (id: string): Promise<Faculty | null> => {
   return result;
 };
 
+const assignCoursesService = async (
+  id: string,
+  payload: string[]
+): Promise<Faculty | null> => {
+  await prisma.courseFaculty.createMany({
+    data: payload.map((courseId: string) => ({
+      facultyId: id,
+      courseId,
+    })),
+  });
+
+  const response = await prisma.faculty.findUnique({
+    where: {
+      id,
+    },
+    include: {
+      courses: {
+        include: {
+          course: true,
+        },
+      },
+    },
+  });
+  return response;
+};
+
+const removeCoursesService = async (id: string, payload: string[]) => {
+  const result = await prisma.courseFaculty.deleteMany({
+    where: {
+      AND: [{ facultyId: id }, { courseId: { in: payload } }],
+    },
+  });
+
+  return result;
+};
+
 export const FacultyService = {
   createFacultyService,
   getAllFacultyService,
   getSingleFacultyService,
   updateFacultyService,
   deleteFacultyService,
+  assignCoursesService,
+  removeCoursesService,
 };

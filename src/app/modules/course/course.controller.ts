@@ -1,4 +1,4 @@
-import { Course } from "@prisma/client";
+import { Course, CourseFaculty } from "@prisma/client";
 import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiError";
 import asyncHandler from "../../../shared/asyncHandler";
@@ -77,10 +77,43 @@ const deleteCourse = asyncHandler(async (req, res) => {
   });
 });
 
+const assignFaculties = asyncHandler(async (req, res) => {
+  const result = await CourseService.assignFacultiesService(
+    req.params.id,
+    req.body.faculties
+  );
+
+  sendResponse<CourseFaculty[]>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Faculty assigned successfully",
+    data: result,
+  });
+});
+
+const removeFaculties = asyncHandler(async (req, res) => {
+  const result = await CourseService.removeFacultiesService(
+    req.params.id,
+    req.body.faculties
+  );
+
+  if (!result.count) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Failed to remove faculties");
+  }
+
+  sendResponse<CourseFaculty[]>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Faculty removed successfully",
+  });
+});
+
 export const CourseController = {
   createCourse,
   getAllCourse,
   getSingleCourse,
   updateCourse,
   deleteCourse,
+  assignFaculties,
+  removeFaculties,
 };
