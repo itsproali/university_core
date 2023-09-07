@@ -10,7 +10,7 @@ const queryParams: RequestHandler = (req, res, next) => {
     : "createdAt";
   // const sortOrder: 1 | -1 =
   //   String(req.query.sortOrder) === 'asc' ? 1 : -1 || -1;
-  const sortOrder = String(req.query.sortOrder) || "desc";
+  const sortOrder = req.query.sortOrder ? String(req.query.sortOrder) : "desc";
 
   // setting up filters
   const query: object = req.query;
