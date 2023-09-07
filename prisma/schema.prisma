@@ -184,14 +184,16 @@ model OfferedCourse {
 }
 
 model OfferedCourseSection {
-  id                     String               @id @default(uuid())
-  title                  String
-  createdAt              DateTime             @default(now())
-  updatedAt              DateTime             @updatedAt
-  semesterRegistrationId String
-  semesterRegistration   SemesterRegistration @relation(fields: [semesterRegistrationId], references: [id])
-  offeredCourseId        String
-  offeredCourse          OfferedCourse        @relation(fields: [offeredCourseId], references: [id])
+  id                       String               @id @default(uuid())
+  title                    String
+  maxCapacity              Int                  @default(0)
+  currentlyEnrolledStudent Int                  @default(0)
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
+  semesterRegistrationId   String
+  semesterRegistration     SemesterRegistration @relation(fields: [semesterRegistrationId], references: [id])
+  offeredCourseId          String
+  offeredCourse            OfferedCourse        @relation(fields: [offeredCourseId], references: [id])
 
   @@map("offered_course_sections")
 }
