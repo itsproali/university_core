@@ -37,4 +37,10 @@ router.delete(
   SemesterRegistrationController.deleteSemesterRegistration
 );
 
+router.post(
+  "/start/:id",
+  authGuard(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
+  SemesterRegistrationController.startRegistration
+);
+
 export const SemesterRegistrationRoutes = router;

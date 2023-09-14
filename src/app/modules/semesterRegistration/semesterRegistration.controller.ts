@@ -88,10 +88,24 @@ const deleteSemesterRegistration = asyncHandler(async (req, res) => {
   });
 });
 
+const startRegistration = asyncHandler(async (req, res) => {
+  const id = req?.user?.userId;
+  const result =
+    await SemesterRegistrationService.startSemesterRegistrationService(id);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Semester Registration started successfully",
+    data: result,
+  });
+});
+
 export const SemesterRegistrationController = {
   createSemesterRegistration,
   getAllSemesterRegistration,
   getSingleSemesterRegistration,
   updateSemesterRegistration,
   deleteSemesterRegistration,
+  startRegistration,
 };
