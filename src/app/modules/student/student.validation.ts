@@ -11,12 +11,8 @@ export const createStudentZodSchema = z.object({
     lastName: z.string({
       required_error: "Last name is required",
     }),
-    middleName: z.string({
-      required_error: "Middle name is required",
-    }),
-    profileImage: z.string({
-      required_error: "Profile image is required",
-    }),
+    middleName: z.string().optional(),
+    profileImage: z.string().optional(),
     email: z.string({
       required_error: "Email is required",
     }),
