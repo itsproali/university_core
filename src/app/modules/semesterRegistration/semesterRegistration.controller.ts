@@ -158,6 +158,17 @@ const getStudentRegistration = asyncHandler(async (req, res) => {
   });
 });
 
+const startNewSemester = asyncHandler(async (req, res) => {
+  const id = req.params.id;
+  await SemesterRegistrationService.startNewSemesterService(id);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Semester Started successfully",
+  });
+});
+
 export const SemesterRegistrationController = {
   createSemesterRegistration,
   getAllSemesterRegistration,
@@ -169,4 +180,5 @@ export const SemesterRegistrationController = {
   withdrawFromCourse,
   confirmRegistration,
   getStudentRegistration,
+  startNewSemester,
 };

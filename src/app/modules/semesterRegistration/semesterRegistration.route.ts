@@ -56,6 +56,12 @@ router.get(
   SemesterRegistrationController.getStudentRegistration
 );
 
+router.post(
+  "/start-new-semester/:id",
+  authGuard(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
+  SemesterRegistrationController.startNewSemester
+);
+
 // Dynamic routes
 router.get(
   "/:id",

@@ -1,13 +1,16 @@
 import {
+  OfferedCourse,
   SemesterRegistration,
   SemesterRegistrationStatus,
   StudentSemesterRegistration,
+  StudentSemesterRegistrationCourse,
 } from "@prisma/client";
 import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiError";
 import getPrismaQuery from "../../../helpers/getPrismaQuery";
 import { IQueryParams } from "../../../interfaces/common";
 import prisma from "../../../shared/prisma";
+import { asyncForEach } from "../../../shared/utils";
 import { studentSemesterRegistrationCourseService } from "../studentSemesterRegistrationCourse/studentSemesterRegistrationCourse.service";
 import { IEnrollCoursePayload } from "./semesterRegistration.interface";
 
@@ -339,6 +342,114 @@ const getStudentRegistrationService = async (
   return studentSemesterRegistrations;
 };
 
+const startNewSemesterService = async (id: string) => {
+  const semesterRegistration = await prisma.semesterRegistration.findUnique({
+    where: {
+      id,
+    },
+    include: {
+      academicSemester: true,
+    },
+  });
+
+  if (!semesterRegistration) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Semester registration not found"
+    );
+  }
+
+  // if (semesterRegistration.status !== SemesterRegistrationStatus.ENDED) {
+  //   throw new ApiError(
+  //     httpStatus.BAD_REQUEST,
+  //     "Semester Registration is not ended yet"
+  //   );
+  // }
+
+  // if (semesterRegistration.academicSemester.isCurrent) {
+  //   throw new ApiError(httpStatus.BAD_REQUEST, "Semester is already started!");
+  // }
+
+  await prisma.$transaction(async tx => {
+    await tx.academicSemester.updateMany({
+      where: {
+        isCurrent: true,
+      },
+      data: {
+        isCurrent: false,
+      },
+    });
+
+    await tx.academicSemester.update({
+      where: {
+        id: semesterRegistration.academicSemesterId,
+      },
+      data: {
+        isCurrent: true,
+      },
+    });
+
+    const studentSemesterRegistrations =
+      await prisma.studentSemesterRegistration.findMany({
+        where: {
+          semesterRegistrationId: id,
+          isConfirmed: true,
+        },
+      });
+
+    await asyncForEach(
+      studentSemesterRegistrations,
+      async (studentSemReg: StudentSemesterRegistration) => {
+        const studentSemesterRegistrationCourses =
+          await tx.studentSemesterRegistrationCourse.findMany({
+            where: {
+              semesterRegistrationId: id,
+              studentId: studentSemReg.studentId,
+            },
+            include: {
+              offeredCourse: {
+                include: {
+                  course: true,
+                },
+              },
+            },
+          });
+
+        await asyncForEach(
+          studentSemesterRegistrationCourses,
+          async (
+            item: StudentSemesterRegistrationCourse & {
+              offeredCourse: OfferedCourse;
+            }
+          ) => {
+            const enrolledCourseData = {
+              studentId: item.studentId,
+              courseId: item.offeredCourse.courseId,
+              academicSemesterId: semesterRegistration.academicSemesterId,
+            };
+
+            const isExist = await tx.studentEnrolledCourse.findFirst({
+              where: {
+                studentId: item.studentId,
+                courseId: item.offeredCourse.courseId,
+                academicSemesterId: semesterRegistration.academicSemesterId,
+              },
+            });
+
+            if (!isExist) {
+              await tx.studentEnrolledCourse.create({
+                data: enrolledCourseData,
+              });
+            }
+          }
+        );
+      }
+    );
+
+    // -----
+  });
+};
+
 export const SemesterRegistrationService = {
   createSemesterRegistrationService,
   getAllSemesterRegistrationService,
@@ -350,4 +461,5 @@ export const SemesterRegistrationService = {
   withdrawFromCourseService,
   confirmRegistrationService,
   getStudentRegistrationService,
+  startNewSemesterService,
 };
