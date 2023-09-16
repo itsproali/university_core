@@ -44,3 +44,14 @@ export const updateSemesterRegistrationZodSchema = z.object({
     academicSemesterId: z.string({}).optional(),
   }),
 });
+
+export const enrollOrWithdrawCourseZodSchema = z.object({
+  body: z.object({
+    offeredCourseId: z.string({
+      required_error: "Offered course id is required",
+    }),
+    offeredCourseSectionId: z.string({
+      required_error: "Offered course Section id is required",
+    }),
+  }),
+});

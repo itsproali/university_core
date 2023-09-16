@@ -8,6 +8,8 @@ import ApiError from "../../../errors/ApiError";
 import getPrismaQuery from "../../../helpers/getPrismaQuery";
 import { IQueryParams } from "../../../interfaces/common";
 import prisma from "../../../shared/prisma";
+import { studentSemesterRegistrationCourseService } from "../studentSemesterRegistrationCourse/studentSemesterRegistrationCourse.service";
+import { IEnrollCoursePayload } from "./semesterRegistration.interface";
 
 const createSemesterRegistrationService = async (
   payload: SemesterRegistration
@@ -182,7 +184,7 @@ const startSemesterRegistrationService = async (
       httpStatus.BAD_REQUEST,
       "Registration is not started yet"
     );
-}
+  }
 
   let studentRegistration = await prisma.studentSemesterRegistration.findFirst({
     where: {
@@ -218,6 +220,125 @@ const startSemesterRegistrationService = async (
   };
 };
 
+const enrollIntoCourseService = async (
+  authUserId: string,
+  payload: IEnrollCoursePayload
+): Promise<{ message: string }> => {
+  return studentSemesterRegistrationCourseService.enrollIntoCourse(
+    authUserId,
+    payload
+  );
+};
+
+const withdrawFromCourseService = async (
+  authUserId: string,
+  payload: IEnrollCoursePayload
+): Promise<{ message: string }> => {
+  return studentSemesterRegistrationCourseService.withdrewFromCourse(
+    authUserId,
+    payload
+  );
+};
+
+const confirmRegistrationService = async (
+  authUserId: string
+): Promise<{ message: string }> => {
+  const semesterRegistration = await prisma.semesterRegistration.findFirst({
+    where: {
+      status: SemesterRegistrationStatus.ONGOING,
+    },
+  });
+
+  // 3 - 6
+  const studentSemesterRegistration =
+    await prisma.studentSemesterRegistration.findFirst({
+      where: {
+        semesterRegistration: {
+          id: semesterRegistration?.id,
+        },
+        student: {
+          studentId: authUserId,
+        },
+      },
+    });
+
+  if (!studentSemesterRegistration) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "You are not recognized for this semester!"
+    );
+  }
+
+  if (studentSemesterRegistration.totalCreditsTaken === 0) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "You are not enrolled in any course!"
+    );
+  }
+
+  if (
+    studentSemesterRegistration.totalCreditsTaken &&
+    semesterRegistration?.minCredit &&
+    semesterRegistration.maxCredit &&
+    (studentSemesterRegistration.totalCreditsTaken <
+      semesterRegistration?.minCredit ||
+      studentSemesterRegistration.totalCreditsTaken >
+        semesterRegistration?.maxCredit)
+  ) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      `You can take only ${semesterRegistration.minCredit} to ${semesterRegistration.maxCredit} credits`
+    );
+  }
+
+  await prisma.studentSemesterRegistration.update({
+    where: {
+      id: studentSemesterRegistration.id,
+    },
+    data: {
+      isConfirmed: true,
+    },
+  });
+  return {
+    message: "Your registration is confirmed!",
+  };
+};
+
+const getStudentRegistrationService = async (
+  authUserId: string
+): Promise<StudentSemesterRegistration[] | null> => {
+  const semesterRegistration = await prisma.semesterRegistration.findFirst({
+    where: {
+      status: SemesterRegistrationStatus.ONGOING,
+    },
+  });
+
+  if (!semesterRegistration) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "There is no ongoing semester registration"
+    );
+  }
+
+  const studentSemesterRegistrations =
+    await prisma.studentSemesterRegistration.findMany({
+      where: {
+        semesterRegistration: {
+          id: semesterRegistration.id,
+        },
+        student: {
+          studentId: authUserId,
+        },
+      },
+      include: {
+        student: true,
+        semesterRegistration: true,
+      },
+    });
+
+  return studentSemesterRegistrations;
+};
+
 export const SemesterRegistrationService = {
   createSemesterRegistrationService,
   getAllSemesterRegistrationService,
@@ -225,4 +346,8 @@ export const SemesterRegistrationService = {
   updateSemesterRegistrationService,
   deleteSemesterRegistrationService,
   startSemesterRegistrationService,
+  enrollIntoCourseService,
+  withdrawFromCourseService,
+  confirmRegistrationService,
+  getStudentRegistrationService,
 };

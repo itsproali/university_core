@@ -101,6 +101,63 @@ const startRegistration = asyncHandler(async (req, res) => {
   });
 });
 
+const enrollIntoCourse = asyncHandler(async (req, res) => {
+  const id = req?.user?.userId;
+  const result = await SemesterRegistrationService.enrollIntoCourseService(
+    id,
+    req.body
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Successfully enrolled into course",
+    data: result,
+  });
+});
+
+const withdrawFromCourse = asyncHandler(async (req, res) => {
+  const id = req?.user?.userId;
+  const result = await SemesterRegistrationService.withdrawFromCourseService(
+    id,
+    req.body
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Successfully withdraw from course",
+    data: result,
+  });
+});
+
+const confirmRegistration = asyncHandler(async (req, res) => {
+  const id = req?.user?.userId;
+  const result = await SemesterRegistrationService.confirmRegistrationService(
+    id
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Semester Registration confirmed successfully",
+    data: result,
+  });
+});
+
+const getStudentRegistration = asyncHandler(async (req, res) => {
+  const id = req?.user?.userId;
+  const result =
+    await SemesterRegistrationService.getStudentRegistrationService(id);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Semester Registration retrieved successfully",
+    data: result,
+  });
+});
+
 export const SemesterRegistrationController = {
   createSemesterRegistration,
   getAllSemesterRegistration,
@@ -108,4 +165,8 @@ export const SemesterRegistrationController = {
   updateSemesterRegistration,
   deleteSemesterRegistration,
   startRegistration,
+  enrollIntoCourse,
+  withdrawFromCourse,
+  confirmRegistration,
+  getStudentRegistration,
 };
