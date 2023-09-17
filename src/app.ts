@@ -17,7 +17,7 @@ app.use(morgan("dev"));
 
 // Default route
 app.get("/", (req: Request, res: Response) => {
-  res.status(200).send("Welcome to the University Management System API!");
+  res.status(200).send("Welcome to the University Management System Core Service!");
 });
 
 // Routes
