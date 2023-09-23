@@ -260,6 +260,7 @@ CREATE TABLE "sudent_semester_payments" (
     "fullPaymentAmount" DOUBLE PRECISION DEFAULT 0,
     "partialPaymentAmount" DOUBLE PRECISION DEFAULT 0,
     "totalPaidAmount" DOUBLE PRECISION DEFAULT 0,
+    "totalDueAmount" DOUBLE PRECISION DEFAULT 0,
     "paymentStatus" "PaymentStatus" DEFAULT 'PENDING',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,

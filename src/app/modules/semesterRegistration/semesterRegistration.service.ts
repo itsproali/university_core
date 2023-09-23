@@ -11,6 +11,8 @@ import getPrismaQuery from "../../../helpers/getPrismaQuery";
 import { IQueryParams } from "../../../interfaces/common";
 import prisma from "../../../shared/prisma";
 import { asyncForEach } from "../../../shared/utils";
+import { StudentEnrolledCourseMarkService } from "../studentEnrolledCourseMark/studentEnrolledCourseMark.service";
+import { studentSemesterPaymentService } from "../studentSemesterPayment/studentSemesterPayment.service";
 import { studentSemesterRegistrationCourseService } from "../studentSemesterRegistrationCourse/studentSemesterRegistrationCourse.service";
 import { IEnrollCoursePayload } from "./semesterRegistration.interface";
 
@@ -359,16 +361,16 @@ const startNewSemesterService = async (id: string) => {
     );
   }
 
-  // if (semesterRegistration.status !== SemesterRegistrationStatus.ENDED) {
-  //   throw new ApiError(
-  //     httpStatus.BAD_REQUEST,
-  //     "Semester Registration is not ended yet"
-  //   );
-  // }
+  if (semesterRegistration.status !== SemesterRegistrationStatus.ENDED) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Semester Registration is not ended yet"
+    );
+  }
 
-  // if (semesterRegistration.academicSemester.isCurrent) {
-  //   throw new ApiError(httpStatus.BAD_REQUEST, "Semester is already started!");
-  // }
+  if (semesterRegistration.academicSemester.isCurrent) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Semester is already started!");
+  }
 
   await prisma.$transaction(async tx => {
     await tx.academicSemester.updateMany({
@@ -400,6 +402,16 @@ const startNewSemesterService = async (id: string) => {
     await asyncForEach(
       studentSemesterRegistrations,
       async (studentSemReg: StudentSemesterRegistration) => {
+        if (studentSemReg.totalCreditsTaken) {
+          const totalPaymentAmount = studentSemReg.totalCreditsTaken * 1000;
+
+          await studentSemesterPaymentService.createSemesterPayment(tx, {
+            studentId: studentSemReg.studentId,
+            academicSemesterId: semesterRegistration.academicSemesterId,
+            totalPaymentAmount,
+          });
+        }
+
         const studentSemesterRegistrationCourses =
           await tx.studentSemesterRegistrationCourse.findMany({
             where: {
@@ -422,12 +434,6 @@ const startNewSemesterService = async (id: string) => {
               offeredCourse: OfferedCourse;
             }
           ) => {
-            const enrolledCourseData = {
-              studentId: item.studentId,
-              courseId: item.offeredCourse.courseId,
-              academicSemesterId: semesterRegistration.academicSemesterId,
-            };
-
             const isExist = await tx.studentEnrolledCourse.findFirst({
               where: {
                 studentId: item.studentId,
@@ -437,9 +443,25 @@ const startNewSemesterService = async (id: string) => {
             });
 
             if (!isExist) {
-              await tx.studentEnrolledCourse.create({
-                data: enrolledCourseData,
-              });
+              const enrolledCourseData = {
+                studentId: item.studentId,
+                courseId: item.offeredCourse.courseId,
+                academicSemesterId: semesterRegistration.academicSemesterId,
+              };
+
+              const studentEnrolledCourseData =
+                await tx.studentEnrolledCourse.create({
+                  data: enrolledCourseData,
+                });
+
+              await StudentEnrolledCourseMarkService.createStudentEnrolledCourseDefaultMark(
+                tx,
+                {
+                  studentId: item.studentId,
+                  studentEnrolledCourseId: studentEnrolledCourseData.id,
+                  academicSemesterId: semesterRegistration.academicSemesterId,
+                }
+              );
             }
           }
         );
