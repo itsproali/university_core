@@ -19,6 +19,25 @@ router.post(
 );
 
 router.get("/", queryParams, StudentController.getAllStudent);
+
+router.get(
+  "/my-courses",
+  authGuard(ENUM_USER_ROLE.STUDENT),
+  StudentController.getStudentCourses
+);
+
+router.get(
+  "/my-course-schedules",
+  authGuard(ENUM_USER_ROLE.STUDENT),
+  StudentController.getStudentCourseSchedules
+);
+
+router.get(
+  "/my-academic-info",
+  authGuard(ENUM_USER_ROLE.STUDENT),
+  StudentController.getAcademicInfo
+);
+
 router.get("/:id", StudentController.getSingleStudent);
 
 router.patch(

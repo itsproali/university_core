@@ -111,6 +111,18 @@ const removeCourses = asyncHandler(async (req, res) => {
   });
 });
 
+const getFacultyCourses = asyncHandler(async (req, res) => {
+  const userId = req.user?.id;
+  const result = await FacultyService.getFacultyCoursesService(userId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Faculty courses retrieved successfully",
+    data: result,
+  });
+});
+
 export const FacultyController = {
   createFaculty,
   getAllFaculty,
@@ -119,4 +131,5 @@ export const FacultyController = {
   deleteFaculty,
   assignCourses,
   removeCourses,
+  getFacultyCourses,
 };

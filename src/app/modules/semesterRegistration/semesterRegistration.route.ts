@@ -24,6 +24,12 @@ router.get(
   SemesterRegistrationController.getAllSemesterRegistration
 );
 
+router.get(
+  "/get-semester-courses",
+  authGuard(ENUM_USER_ROLE.STUDENT),
+  SemesterRegistrationController.getSemesterCourses
+);
+
 router.post(
   "/start-registration",
   authGuard(ENUM_USER_ROLE.STUDENT),

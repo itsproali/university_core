@@ -1,14 +1,21 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { OfferedCourseSection } from "@prisma/client";
 import getPrismaQuery from "../../../helpers/getPrismaQuery";
 import { IQueryParams } from "../../../interfaces/common";
 import prisma from "../../../shared/prisma";
+import { asyncForEach } from "../../../shared/utils";
+import {
+  checkFacultyAvailable,
+  checkRoomAvailable,
+} from "../offeredCourseClassSchedule/offeredCourseClassSchedule.utils";
 
 const createOfferedCourseSectionService = async (
-  payload: OfferedCourseSection
-): Promise<OfferedCourseSection> => {
+  payload: any
+): Promise<OfferedCourseSection | null> => {
+  const { classSchedules, ...data } = payload;
   const offeredCourse = await prisma.offeredCourse.findUnique({
     where: {
-      id: payload.offeredCourseId,
+      id: data.offeredCourseId,
     },
   });
 
@@ -16,10 +23,53 @@ const createOfferedCourseSectionService = async (
     throw new Error("Offered Course does not exist");
   }
 
-  payload.semesterRegistrationId = offeredCourse.semesterRegistrationId;
+  data.semesterRegistrationId = offeredCourse.semesterRegistrationId;
 
-  const result = await prisma.offeredCourseSection.create({
-    data: payload,
+  await asyncForEach(classSchedules, async (schedule: any) => {
+    await checkRoomAvailable(schedule);
+    await checkFacultyAvailable(schedule);
+  });
+
+  const isExist = await prisma.offeredCourseSection.findFirst({
+    where: {
+      offeredCourseId: data.offeredCourseId,
+      title: data.title,
+    },
+  });
+
+  if (isExist) {
+    throw new Error("Offered Course Section already exist");
+  }
+
+  const create = await prisma.$transaction(async tx => {
+    const offeredCourseSection = await tx.offeredCourseSection.create({
+      data: data,
+    });
+
+    if (classSchedules.length !== 0) {
+      await tx.offeredCourseClassSchedule.createMany({
+        data: payload.classSchedules.map((schedule: any) => ({
+          startTime: schedule.startTime,
+          endTime: schedule.endTime,
+          dayOfWeek: schedule.dayOfWeek,
+          offeredCourseSectionId: offeredCourseSection.id,
+          semesterRegistrationId: offeredCourse.semesterRegistrationId,
+          roomId: schedule.roomId,
+          facultyId: schedule.facultyId,
+        })),
+      });
+    }
+    return offeredCourseSection;
+  });
+
+  const result = await prisma.offeredCourseSection.findUnique({
+    where: {
+      id: create.id,
+    },
+    include: {
+      offeredCourse: true,
+      offeredCourseClassSchedules: true,
+    },
   });
 
   return result;

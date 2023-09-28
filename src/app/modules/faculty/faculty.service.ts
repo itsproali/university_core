@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Faculty } from "@prisma/client";
 import getPrismaQuery from "../../../helpers/getPrismaQuery";
 import { IQueryParams } from "../../../interfaces/common";
@@ -109,6 +110,81 @@ const removeCoursesService = async (id: string, payload: string[]) => {
   return result;
 };
 
+const getFacultyCoursesService = async (id: string) => {
+  const currentSemester = await prisma.academicSemester.findFirst({
+    where: {
+      isCurrent: true,
+    },
+  });
+
+  const offeredCourseSections = await prisma.offeredCourseSection.findMany({
+    where: {
+      offeredCourseClassSchedules: {
+        some: {
+          faculty: {
+            facultyId: id,
+          },
+        },
+      },
+      offeredCourse: {
+        semesterRegistration: {
+          academicSemesterId: currentSemester?.id,
+        },
+      },
+    },
+
+    include: {
+      offeredCourse: {
+        include: {
+          course: true,
+        },
+      },
+      offeredCourseClassSchedules: {
+        include: {
+          room: {
+            include: {
+              building: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const courseAndSchedule = offeredCourseSections.reduce(
+    (acc: any, obj: any) => {
+      const course = obj.offeredCourse.course;
+      const schedules = obj.offeredCourseClassSchedules;
+
+      const existingCourse = acc?.find(
+        (item: any) => item?.course?.id === course?.id
+      );
+
+      if (existingCourse) {
+        existingCourse.sections.push({
+          section: obj.section,
+          schedules,
+        });
+      } else {
+        acc.push({
+          course,
+          sections: [
+            {
+              section: obj.section,
+              schedules,
+            },
+          ],
+        });
+      }
+
+      return acc;
+    },
+    []
+  );
+
+  return courseAndSchedule;
+};
+
 export const FacultyService = {
   createFacultyService,
   getAllFacultyService,
@@ -117,4 +193,5 @@ export const FacultyService = {
   deleteFacultyService,
   assignCoursesService,
   removeCoursesService,
+  getFacultyCoursesService,
 };

@@ -57,5 +57,10 @@ router.delete(
   FacultyController.removeCourses
 );
 
+router.get(
+  "/my-courses",
+  authGuard(ENUM_USER_ROLE.FACULTY),
+  FacultyController.getFacultyCourses
+);
 
 export const FacultyRoutes = router;

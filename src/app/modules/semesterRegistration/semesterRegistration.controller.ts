@@ -169,6 +169,20 @@ const startNewSemester = asyncHandler(async (req, res) => {
   });
 });
 
+const getSemesterCourses = asyncHandler(async (req, res) => {
+  const userId = req?.user?.userId;
+  const result = await SemesterRegistrationService.getSemesterCoursesService(
+    userId
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Semester Courses retrieved successfully",
+    data: result,
+  });
+});
+
 export const SemesterRegistrationController = {
   createSemesterRegistration,
   getAllSemesterRegistration,
@@ -181,4 +195,5 @@ export const SemesterRegistrationController = {
   confirmRegistration,
   getStudentRegistration,
   startNewSemester,
+  getSemesterCourses,
 };
